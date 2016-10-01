@@ -2,8 +2,9 @@
 #define HTTP_PARSER_H
 
 #include <string>
+#include <vector>
 
-#define BUFFER_SIZE 4096
+// #define BUFFER_SIZE 4096
 
 /*
  *  正在解析的请求的状态：PARSE_REQUESTLINE表示正在解析请求行
@@ -23,7 +24,7 @@ enum LINE_STATUS { LINE_OK = 0, LINE_ERROR, LINE_MORE };
  * INTERNAL_ERROR表示服务器内部出现错误
  * CLOSE_CONNECTION表示客户端已经关闭连接
  */
-enum HTTP_CODE { MORE_DATE = 0, GET_REQUEST, REQUEST_ERROR, FORBIDDEN_REQUEST,
+enum HTTP_CODE { MORE_DATA = 0, GET_REQUEST, REQUEST_ERROR, FORBIDDEN_REQUEST,
     INTERNAL_ERROR, CLOSE_CONNECTION };
 
 // 客户请求的方法
@@ -48,11 +49,15 @@ public:
     http_request get_parse_result(); // 返回请求的结果
     
 private:
-    LINE_STATUS parse_line();      // 解析出一行内容
-    HTTP_CODE parse_requestline(); // 解析请求行
-    HTTP_CODE parse_headers();     // 解析头部字段
-    HTTP_CODE parse_content();     // 解析HTTP的入口函数
+    LINE_STATUS parse_line();        // 解析出一行内容
+    HTTP_CODE parse_requestline();   // 解析请求行
+    HTTP_CODE parse_headers();       // 解析头部字段
 
+    std::string request;             // 客户请求内容
+    std::vector<std::string> lines;  // 存储每一行请求
+    string::size_type line_begin;    // 正在解析的行的行首索引
+    string::size_type check_index;   // 当前正在解析的字符索引
+    http_request parse_result;
 };  
 
 #endif  // HTTP_PARSER_H
