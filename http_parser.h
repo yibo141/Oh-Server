@@ -34,7 +34,7 @@ enum METHOD { GET = 0, POST, HEAD, PUT, DELETE, TRACE,
 // 解析请求后的数据存储在http_request结构体中
 typedef struct
 {
-    METHOD method;          // 请求的方法
+    std::string method;     // 请求的方法
     std::string uri;        // 请求的uri
     std::string version;    // HTTP版本
     std::string host;       // 请求的主机名
@@ -46,18 +46,16 @@ class parser
 public:
     parser(std::string request);
     ~parser();
-    http_request get_parse_result(); // 返回请求的结果
+    http_request get_parse_result();   // 返回请求的结果
     
 private:
-    LINE_STATUS parse_line();        // 解析出一行内容
-    HTTP_CODE parse_requestline();   // 解析请求行
-    HTTP_CODE parse_headers();       // 解析头部字段
+    void parse_line();                 // 解析出一行内容
+    void parse_requestline();          // 解析请求行
+    void parse_headers();              // 解析头部字段
 
-    std::string request;             // 客户请求内容
-    std::vector<std::string> lines;  // 存储每一行请求
-    string::size_type line_begin;    // 正在解析的行的行首索引
-    string::size_type check_index;   // 当前正在解析的字符索引
-    http_request parse_result;
+    std::string request;               // 客户请求内容
+    std::vector<std::string> lines;    // 存储每一行请求
+    http_request parse_result;         // 存储解析结果
 };  
 
 #endif  // HTTP_PARSER_H

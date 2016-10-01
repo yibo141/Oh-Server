@@ -1,37 +1,40 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <cstring>
 #include <strings.h>
+#include <iostream>
 #include "http_parser.h"
 
 parser::parser(std::string request)
 {
     this->request = request;
-    line_begin = 0;
-    check_index = 0;
 }
 
 parser::~parser() { }
 
 http_request parser::get_parse_result()
 {
+    parse_line();
+    parse_requestline();
+    parse_headers();
     return parse_result;
 }
 
-LINE_STATUS parser::parse_line()
+void parser::parse_line()
 {
-    char temp;
-    for( ; check_index < request.size(); ++check_index)
+    std::string::size_type line_begin = 0;   // 正在解析的行的行首索引
+    std::string::size_type check_index = 0;  // 正在解析的字符索引
+
+    while(check_index < request.size())
     {
-        temp = request[check_index];
         // 如果当前字符是'\r'，则有可能读到一行
-        if(temp == '\r')
+        if(request[check_index] == '\r')
         {
             // 如果当前字符是最后一个字符则说明请求没有读取完整
             if((check_index + 1) == request.size())
             {
-                return LINE_MORE;
+                std::cout << "请求没有读取完整" << std::endl;
+                return;
             }
             // 如果下一个字符是'\n'，则说明我们读取到了完整的一行
             else if(request[check_index+1] == '\n')
@@ -40,15 +43,20 @@ LINE_STATUS parser::parse_line()
                             check_index - line_begin));
                 check_index += 2;
                 line_begin = check_index;
-                return LINE_OK;
             }
-            return LINE_ERROR;
+            else
+            {
+                std::cout << "请求错误" << std::endl;
+                return;
+            }
         }
+        else
+            ++check_index;
     }
-    return LINE_MORE;  // 如果解析完都没有遇到'\r'字符则说明没有读取完整
+    return;
 }
 
-HTTP_CODE parser::parse_requestline()
+void parser::parse_requestline()
 {
     std::string requestline = lines[0];
 
@@ -58,7 +66,10 @@ HTTP_CODE parser::parse_requestline()
 
     // 如果请求行中没有出现空白则请求必定有错误
     if(first_ws == requestline.cend())
-        return REQUEST_ERROR;
+    {
+        std::cout << "请求错误" << std::endl;
+        return;
+    }
     // 截取请求方法
     parse_result.method = std::string(requestline.cbegin(), first_ws);
 
@@ -76,23 +87,23 @@ HTTP_CODE parser::parse_requestline()
         --last_ws;
 
     parse_result.uri = std::string(first_ws, last_ws + 1);
-    return MORE_DATA;
+    return;
 }
 
-HTTP_CODE parser::parse_headers()
+void parser::parse_headers()
 {
-    for(int i = 1; i < lines.size() ++i)
+    for(int i = 1; i < lines.size(); ++i)
     {
-        if(lines[i].empty())
-            return GET_REQUEST;
-        else if(strncasecmp(lines[i], "Host:", 5) == 0) // 处理"Host"头部字段
+        if(lines[i].empty()) // 如果遇到空行说明请求解析完毕
+            return;
+        else if(strncasecmp(lines[i].c_str(), "Host:", 5) == 0) // 处理"Host"头部字段
         {
             auto iter = lines[i].cbegin() + 5;
             while(*iter == ' ' || *iter == '\t')
                 ++iter;
             parse_result.host = std::string(iter, lines[i].cend());
         }
-        else if(strncasecmp(lines[i], "Connection:", 11) == 0) // 处理"Connection"头部字段
+        else if(strncasecmp(lines[i].c_str(), "Connection:", 11) == 0) // 处理"Connection"头部字段
         {
             auto iter = lines[i].cbegin() + 11;
             while(*iter == ' ' || *iter == '\t')
@@ -104,5 +115,5 @@ HTTP_CODE parser::parse_headers()
             // 其他头部字段暂时忽略
         }
     }
-    return MORE_DATA;
+    return;
 }
