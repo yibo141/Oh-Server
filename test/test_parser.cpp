@@ -7,7 +7,7 @@ using namespace std;
 int main()
 {
     string request = "GET /index.html HTTP/1.1\r\nHost: www.zhihu.com\r\nConnection: keep-alive\r\n";
-    parser p(request);
+    http_parser p(request);
     http_request result = p.get_parse_result();
     cout << "Method: " << result.method << endl;
     cout << "URI: " << result.uri << endl;
