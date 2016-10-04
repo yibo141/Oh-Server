@@ -51,7 +51,7 @@ class http_parser
 public:
     http_parser(std::string request);
     ~http_parser();
-    http_request get_parse_result();   // 返回请求的结果
+    http_request get_parse_result();   // 返回解析后的结果
     
 private:
     void parse_line();                 // 解析出一行内容
