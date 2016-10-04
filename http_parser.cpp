@@ -1,18 +1,13 @@
-#include <string>
-#include <vector>
-#include <algorithm>
-#include <strings.h>
-#include <iostream>
 #include "http_parser.h"
 
-parser::parser(std::string request)
+http_parser::http_parser(std::string request)
 {
     this->request = request;
 }
 
-parser::~parser() { }
+http_parser::~http_parser() { }
 
-http_request parser::get_parse_result()
+http_request http_parser::get_parse_result()
 {
     parse_line();
     parse_requestline();
@@ -20,7 +15,7 @@ http_request parser::get_parse_result()
     return parse_result;
 }
 
-void parser::parse_line()
+void http_parser::parse_line()
 {
     std::string::size_type line_begin = 0;   // 正在解析的行的行首索引
     std::string::size_type check_index = 0;  // 正在解析的字符索引
@@ -56,7 +51,7 @@ void parser::parse_line()
     return;
 }
 
-void parser::parse_requestline()
+void http_parser::parse_requestline()
 {
     std::string requestline = lines[0];
 
@@ -90,7 +85,7 @@ void parser::parse_requestline()
     return;
 }
 
-void parser::parse_headers()
+void http_parser::parse_headers()
 {
     for(int i = 1; i < lines.size(); ++i)
     {

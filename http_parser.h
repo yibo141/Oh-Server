@@ -1,8 +1,12 @@
-#ifndef HTTP_PARSER_H
-#define HTTP_PARSER_H
+#ifndef HTTP_HTTP_PARSER_H
+#define HTTP_HTTP_PARSER_H
 
 #include <string>
 #include <vector>
+#include <algorithm>
+#include <iostream>
+
+#include <strings.h>
 
 // #define BUFFER_SIZE 4096
 
@@ -41,11 +45,11 @@ typedef struct
     std::string connection; // Connection首部
 } http_request;
 
-class parser
+class http_parser
 {
 public:
-    parser(std::string request);
-    ~parser();
+    http_parser(std::string request);
+    ~http_parser();
     http_request get_parse_result();   // 返回请求的结果
     
 private:
@@ -58,4 +62,4 @@ private:
     http_request parse_result;         // 存储解析结果
 };  
 
-#endif  // HTTP_PARSER_H
+#endif  // HTTP_HTTP_PARSER_H
