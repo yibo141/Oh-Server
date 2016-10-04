@@ -2,6 +2,7 @@
 
 http_parser::http_parser(std::string request)
 {
+    assert(request.size() > 0);
     this->request = request;
 }
 
@@ -28,7 +29,7 @@ void http_parser::parse_line()
             // 如果当前字符是最后一个字符则说明请求没有读取完整
             if((check_index + 1) == request.size())
             {
-                std::cout << "请求没有读取完整" << std::endl;
+                std::cout << "Request not to read the complete." << std::endl;
                 return;
             }
             // 如果下一个字符是'\n'，则说明我们读取到了完整的一行
@@ -41,7 +42,7 @@ void http_parser::parse_line()
             }
             else
             {
-                std::cout << "请求错误" << std::endl;
+                std::cout << "Request error." << std::endl;
                 return;
             }
         }
@@ -62,7 +63,7 @@ void http_parser::parse_requestline()
     // 如果请求行中没有出现空白则请求必定有错误
     if(first_ws == requestline.cend())
     {
-        std::cout << "请求错误" << std::endl;
+        std::cout << "Request error." << std::endl;
         return;
     }
     // 截取请求方法
