@@ -18,6 +18,7 @@
 
 #define MAX_EVENTS 10000
 
+// 将描述符fd设置为非阻塞
 int setnonblocking(int fd)
 {
     int old_options = fcntl(fd, F_GETFL);
@@ -25,6 +26,10 @@ int setnonblocking(int fd)
     return old_options;
 }
 
+/*
+ * 将套接字sockfd添加到epoll监听列表中
+ * is_one_shot用于选择是否开启EPOLLONESHOT选项
+ */
 void add_sockfd(int epollfd, int sockfd, bool is_one_shot)
 {
     epoll_event event;
@@ -38,12 +43,14 @@ void add_sockfd(int epollfd, int sockfd, bool is_one_shot)
     setnonblocking(sockfd);
 }
 
+// 将sockfd从epoll监听列表中移除
 void rm_sockfd(int epollfd, int sockfd)
 {
     epoll_ctl(epollfd, EPOLL_CTL_DEL, sockfd, 0);
     close(sockfd);
 }
 
+// 改变在sockfd上监听的事件
 void modfd(int epollfd, int sockfd, int ev)
 {
     epoll_event event;
@@ -52,6 +59,7 @@ void modfd(int epollfd, int sockfd, int ev)
     epoll_ctl(epollfd, EPOLL_CTL_MOD, sockfd, &event);
 }
 
+// 注册信号signo的信号处理函数
 void addsig(int signo, void (handler)(int), bool is_restart = true)
 {
     struct sigaction sa;
@@ -65,6 +73,7 @@ void addsig(int signo, void (handler)(int), bool is_restart = true)
     assert(sigaction(signo, &sa, NULL) != -1);
 }
 
+// 输出并向客户发送错误信息
 void show_and_send_error(int connfd, std::string msg)
 {
     std::cout << msg << std::endl;
@@ -119,7 +128,6 @@ int main(int argc, char **argv)
     int epollfd = epoll_create(5);
     assert(epollfd != -1);
     add_sockfd(epollfd, listenfd, false);
-    int user_count = 0;
 
     while(true)
     {
@@ -133,6 +141,7 @@ int main(int argc, char **argv)
         for(int i = 0; i < ready; ++i)
         {
             int sockfd = evlist[i].data.fd;
+            // 有新的客户连接到来
             if(sockfd == listenfd)
             {
                 struct sockaddr_in clientaddr;
@@ -141,71 +150,22 @@ int main(int argc, char **argv)
                         &clientaddr_len);
                 if(connfd < 0)
                 {
-                    std::cout << "errno is: " << errno << std::endl;
-                    continue;
-                }
-                if(user_count >= MAX_EVENTS)
-                {
-                    show_and_send_error(connfd, "Sorry, server is busy.");
+                    std::cout << "error: " << strerror(errno) << std::endl;
                     continue;
                 }
                 add_sockfd(epollfd, connfd, true);
-                user_count--;
             }
+            // epoll出错
             else if(evlist[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
                 close(sockfd);
+            // 有新的请求到来
             else if(evlist[i].events & EPOLLIN)
             {
-                std::cout << "new data from fd: " << sockfd << std::endl;
                 pool->add(new http_process(epollfd, sockfd));
-                user_count--;
             }
         }
     }
 
-    /*
-    while(true)
-    {
-        int ready = epoll_wait(epollfd, evlist, MAX_EVENTS, -1);
-        if(ready == -1)
-            continue;
-        for(int i = 0; i < ready; ++i)
-        {
-            int sockfd = evlist[i].data.fd;
-            if(sockfd == listenfd)
-            {
-                struct sockaddr_in clientaddr;
-                socklen_t clientlen = sizeof(clientaddr);
-                int connfd = accept(listenfd, (struct sockaddr*)&clientaddr,
-                        &clientlen);
-                if(connfd < 0)
-                {
-                    if((errno == EAGAIN) || (errno == EWOULDBLOCK))
-                        continue;
-                    else
-                    {
-                        std::cout << "accept error" << std::endl;
-                        break;
-                    }
-                }
-                add_sockfd(epollfd, connfd, true);
-            }
-            else if((evlist[i].events & EPOLLHUP) ||
-                    (evlist[i].events & EPOLLERR) || 
-                    (!(evlist[i].events & EPOLLIN)))
-            {
-                std::cout << "epoll error" << std::endl;
-                close(evlist[i].data.fd);
-                continue;
-            }
-            else
-            {
-                std::cout << "new data from: " << evlist[i].data.fd << std::endl;
-                pool->add(new http_process(evlist[i].data.fd));
-            }
-        }
-    }
-    */
     close(listenfd);
     close(epollfd);
     delete pool;
