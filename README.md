@@ -18,6 +18,8 @@
 
 `g++ -std=c++11 -pthread httpserver.cpp http_process.cpp http_parser.cpp locker.cpp -o httpserver`
 
+`./httpserver <port>`
+
 ## more details
 
 请见[我的博客](http://www.cnblogs.com/broglie/p/5931375.html)。
