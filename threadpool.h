@@ -1,8 +1,8 @@
 #ifndef THREADPOOL_H
 #define THREADPOOL_H
 
-#include <queue>
-#include <cstdio>
+#include <list>
+#include <iostream>
 #include <cassert>
 #include <stdexcept>
 #include <pthread.h>
@@ -12,66 +12,78 @@ template<typename T>
 class threadpool
 {
 public:
-    threadpool(int thread_number = 4, int max_requests = 100000);
+    threadpool(int thread_number = 4, int max_requests = 10000);
     ~threadpool();
-    bool add(T *request);
+    bool add(T* request);
 
 private:
-    static void *worker(void *arg);
+    static void* worker(void* arg);
     void run();
 
-    int thread_number;              // 线程池中线程数量
-    int max_requests;               // 请求队列中允许的最大请求数
-    std::vector<thread_t> threads;  // 描述线程池的数组，大小为thread_number
-    std::queue<T*> workqueue;       // 请求队列
-    locker queue_locker;            // 保护请求队列的互斥锁
-    semaphore queue_stat;           // 是否有任务需要处理
-    bool is_stop;                   // 是否结束线程
+private:
+    int _thread_number;
+    int _max_requests;
+    pthread_t* _threads;
+    std::list< T* > _workqueue;
+    locker _queuelocker;
+    semaphore _queuestat;
+    bool _stop;
 };
 
 template<typename T>
-threadpool<T>::threadpool(int thread_number, int max_requests)
+threadpool<T>::threadpool(int thread_number, int max_requests): 
+        _thread_number(thread_number), _max_requests(max_requests), _stop(false), _threads(NULL)
 {
-    assert(thread_number > 0 && max_requests > 0);
-    this->thread_number = thread_number;
-    this->max_requests = max_requests;
-    threads.resize(thread_number);
-    is_stop = false;
+    assert((thread_number > 0) && (max_requests > 0));
 
-    // 创建thread_number个线程，并将它们设置为detach
-    for(int i = 0; i < thread_number; ++i) {
-        if(pthread_create(&threads[i], nullptr, worker, this) != 0);
+    _threads = new pthread_t[_thread_number];
+    if(! _threads)
+    {
+        throw std::runtime_error("malloc error");
+    }
+
+    for (int i = 0; i < thread_number; ++i)
+    {
+        std::cout << "create the " << i << "th thread" << std::endl;
+        if(pthread_create( _threads + i, NULL, worker, this ) != 0)
+        {
+            delete[] _threads;
             throw std::runtime_error("pthread_create error");
-        if(pthread_detach(threads[i]) != 0)
+        }
+        if(pthread_detach(_threads[i]))
+        {
+            delete[] _threads;
             throw std::runtime_error("pthread_detach error");
+        }
     }
 }
 
 template<typename T>
 threadpool<T>::~threadpool()
 {
-    is_stop = true;
+    delete[] _threads;
+    _stop = true;
 }
 
 template<typename T>
-bool threadpool<T>::add(T *request)
+bool threadpool<T>::add(T* request)
 {
-    queue_locker.lock();
-
-    // 如果当前请求队列中请求的数量超过允许的最大请求数量，则添加失败
-    if(workqueue.size() > max_requests) {
-        queue_locker.unlock();
+    _queuelocker.lock();
+    if (_workqueue.size() > _max_requests)
+    {
+        _queuelocker.unlock();
         return false;
     }
-    workqueue.push(request);
-    queue_stat.post();
+    _workqueue.push_back(request);
+    _queuelocker.unlock();
+    _queuestat.post();
     return true;
 }
 
 template<typename T>
-void *threadpool<T>::worker(void *arg)
+void* threadpool<T>::worker(void* arg)
 {
-    threadpool *pool = (threadpool*)arg;
+    threadpool* pool = (threadpool*)arg;
     pool->run();
     return pool;
 }
@@ -79,20 +91,24 @@ void *threadpool<T>::worker(void *arg)
 template<typename T>
 void threadpool<T>::run()
 {
-    while(!is_stop) {
-        queue_stat.wait();      // 等待任务
-        queue_locker.lock();
-        if(workqueue.empty()){
-            queue_locker.unlock();
+    while (! _stop)
+    {
+        _queuestat.wait();
+        _queuelocker.lock();
+        if (_workqueue.empty())
+        {
+            _queuelocker.unlock();
             continue;
         }
-        T *request = workqueue.front();
-        workqueue.pop();
-        queue_locker.unlock();
-        if(request == NULL)
+        T* request = _workqueue.front();
+        _workqueue.pop_front();
+        _queuelocker.unlock();
+        if (!request)
+        {
             continue;
+        }
         request->process();
     }
 }
-            
-#endif // THREADPOOL_H
+
+#endif
