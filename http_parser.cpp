@@ -1,6 +1,6 @@
 #include "http_parser.h"
 
-http_parser::http_parser(std::string request)
+http_parser::http_parser(const std::string request)
 {
     assert(request.size() > 0);
     this->request = request;

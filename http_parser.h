@@ -49,7 +49,7 @@ typedef struct
 class http_parser
 {
 public:
-    http_parser(std::string request);
+    http_parser(const std::string request);
     ~http_parser();
     http_request get_parse_result();   // 返回解析后的结果
     
