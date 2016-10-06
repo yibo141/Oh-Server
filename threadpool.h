@@ -28,7 +28,7 @@ private:
     int _thread_number;         // 线程池中线程的数目，一般等于CPU核心数
     int _max_requests;          // 最多的排队的请求个数
     pthread_t* _threads;        // 保存线程ID的数组
-    std::list< T* > _workqueue; // 请求队列
+    std::list<T*> _workqueue;   // 请求队列
     locker _queuelocker;        // 保护请求队列的互斥锁
     semaphore _queuestat;       // 用于指示请求队列状态的信号量
     bool _stop;                 // 用于指示线程池是否停止工作

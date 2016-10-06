@@ -19,7 +19,7 @@
 #define MAX_EVENTS 10000
 
 // 将描述符fd设置为非阻塞
-int setnonblocking(int fd)
+int setnonblocking(const int fd)
 {
     int old_options = fcntl(fd, F_GETFL);
     fcntl(fd, F_SETFL, old_options | O_NONBLOCK);
@@ -30,7 +30,7 @@ int setnonblocking(int fd)
  * 将套接字sockfd添加到epoll监听列表中
  * is_one_shot用于选择是否开启EPOLLONESHOT选项
  */
-void add_sockfd(int epollfd, int sockfd, bool is_one_shot)
+void add_sockfd(const int epollfd, const int sockfd, const bool is_one_shot)
 {
     epoll_event event;
     event.data.fd = sockfd;
@@ -44,14 +44,14 @@ void add_sockfd(int epollfd, int sockfd, bool is_one_shot)
 }
 
 // 将sockfd从epoll监听列表中移除
-void rm_sockfd(int epollfd, int sockfd)
+void rm_sockfd(const int epollfd, const int sockfd)
 {
     epoll_ctl(epollfd, EPOLL_CTL_DEL, sockfd, 0);
     close(sockfd);
 }
 
 // 改变在sockfd上监听的事件
-void modfd(int epollfd, int sockfd, int ev)
+void modfd(const int epollfd, const int sockfd, const int ev)
 {
     epoll_event event;
     event.data.fd = sockfd;
@@ -60,7 +60,7 @@ void modfd(int epollfd, int sockfd, int ev)
 }
 
 // 注册信号signo的信号处理函数
-void addsig(int signo, void (handler)(int), bool is_restart = true)
+void addsig(const int signo, void (handler)(int), bool is_restart = true)
 {
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
@@ -74,7 +74,7 @@ void addsig(int signo, void (handler)(int), bool is_restart = true)
 }
 
 // 输出并向客户发送错误信息
-void show_and_send_error(int connfd, std::string msg)
+void show_and_send_error(const int connfd, const std::string msg)
 {
     std::cout << msg << std::endl;
     send(connfd, msg.c_str(), msg.size(), 0);
