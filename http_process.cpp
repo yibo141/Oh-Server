@@ -1,6 +1,6 @@
 #include "http_process.h"
 
-http_process::http_process(int _epollfd, int _connfd)
+http_process::http_process(const int _epollfd, const int _connfd)
 {
     this->epollfd = _epollfd;
     this->connfd = _connfd;
@@ -61,7 +61,7 @@ void http_process::read_from_connfd()
 }
 
 // 从fd中读取数据到缓冲区buffer
-void http_process::read_to(int fd, char *buffer)
+void http_process::read_to(const int fd, char *buffer)
 {
     size_t bytes_read = 0;
     size_t bytes_left = READ_BUFFER_SIZE;
@@ -153,7 +153,7 @@ void http_process::get_filetype()
 }
 
 // 服务客户请求的静态内容
-void http_process::serve_static(int filesize)
+void http_process::serve_static(const int filesize)
 {
     get_filetype();
     sprintf(write_buffer, "HTTP/1.1 200 OK\r\n");

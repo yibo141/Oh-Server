@@ -24,7 +24,7 @@
 class http_process
 {
 public:
-    http_process(int _epollfd, int _connfd);
+    http_process(const int _epollfd, const int _connfd);
     ~http_process();
     
     // 处理客户请求的入口函数
@@ -37,7 +37,7 @@ private:
     void read_from_connfd();
     
     // 从fd中读取数据到缓冲器buffer中
-    void read_to(int fd, char *buffer);
+    void read_to(const int fd, char *buffer);
 
     // 向客户发送响应
     void send_response();
@@ -49,7 +49,7 @@ private:
     void get_filetype();
 
     // 服务静态内容
-    void serve_static(int filesize);
+    void serve_static(const int filesize);
 
     // 服务动态内容(暂不支持)
     void serve_dynamic();
