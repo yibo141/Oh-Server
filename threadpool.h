@@ -49,7 +49,7 @@ threadpool<T>::threadpool(int thread_number, int max_requests):
     // 创建thread_number个线程并将它们设置为分离的
     for (int i = 0; i < thread_number; ++i)
     {
-        std::cout << "create the " << i << "th thread" << std::endl;
+        std::cout << "create the number" << i << " thread" << std::endl;
         if(pthread_create( _threads + i, NULL, worker, this ) != 0)
         {
             delete[] _threads;
