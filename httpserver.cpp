@@ -85,7 +85,7 @@ int main(int argc, char **argv)
 {
     if(argc != 2)
     {
-        std::cout << "usage: " << argv[0] << "<port>" << std::endl;
+        std::cout << "usage: " << argv[0] << " <port>" << std::endl;
         return 0;
     }
     int port = atoi(argv[1]);
