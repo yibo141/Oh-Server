@@ -16,7 +16,7 @@
 
 ## usage
 
-`g++ -std=c++11 -pthread httpserver.cpp http_process.cpp http_parser.cpp locker.cpp -o Oh-Server`
+`make`
 
 `./Oh-Server <port>`
 
