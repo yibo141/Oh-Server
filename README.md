@@ -14,12 +14,13 @@
 
 
 
-## usage
+## Usage
 
 `make`
 
 `./Oh-Server <port>`
 
-## more details
+## More details
 
-请见[我的博客](http://www.cnblogs.com/broglie/p/5931375.html)。
+这是我以前写的一个版本，我又把它重写了，新建了一个repo在隔壁的`Servant`。更多详细信息请参考[我的博客](http://www.cnblogs.com/broglie/p/5931375.html)。
+
